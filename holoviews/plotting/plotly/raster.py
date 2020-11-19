@@ -21,17 +21,19 @@ class RasterPlot(ColorbarPlot):
 
     style_opts = ['visible', 'cmap', 'alpha']
 
-    trace_kwargs = {'type': 'heatmap'}
+    @classmethod
+    def trace_kwargs(cls, is_geo=False, **kwargs):
+        return {'type': 'heatmap'}
 
-    def graph_options(self, element, ranges, style):
-        opts = super(RasterPlot, self).graph_options(element, ranges, style)
+    def graph_options(self, element, ranges, style, **kwargs):
+        opts = super(RasterPlot, self).graph_options(element, ranges, style, **kwargs)
         copts = self.get_color_opts(element.vdims[0], element, ranges, style)
         opts['zmin'] = copts.pop('cmin')
         opts['zmax'] = copts.pop('cmax')
         opts['zauto'] = copts.pop('cauto')
         return dict(opts, **copts)
 
-    def get_data(self, element, ranges, style):
+    def get_data(self, element, ranges, style, **kwargs):
         if isinstance(element, Image):
             l, b, r, t = element.bounds.lbrt()
         else:
@@ -52,7 +54,7 @@ class RasterPlot(ColorbarPlot):
 
 class HeatMapPlot(HeatMapMixin, RasterPlot):
 
-    def init_layout(self, key, element, ranges):
+    def init_layout(self, key, element, ranges, **kwargs):
         layout = super(HeatMapPlot, self).init_layout(key, element, ranges)
         gridded = element.gridded
         xdim, ydim = gridded.dimensions()[:2]
@@ -75,7 +77,7 @@ class HeatMapPlot(HeatMapMixin, RasterPlot):
             layout[yaxis]['ticktext'] = gridded.dimension_values(1, expanded=False)
         return layout
 
-    def get_data(self, element, ranges, style):
+    def get_data(self, element, ranges, style, **kwargs):
         if not element._unique:
             self.param.warning('HeatMap element index is not unique,  ensure you '
                                'aggregate the data before displaying it, e.g. '
@@ -112,7 +114,7 @@ class QuadMeshPlot(RasterPlot):
         If non-None, data with this value will be replaced with NaN so
         that it is transparent (by default) when plotted.""")
 
-    def get_data(self, element, ranges, style):
+    def get_data(self, element, ranges, style, **kwargs):
         x, y, z = element.dimensions()[:3]
         irregular = element.interface.irregular(element, x)
         if irregular:
